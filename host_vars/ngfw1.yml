@@ -1,0 +1,13 @@
+---
+
+format: xml
+vendor: juniper
+open_ports: [22, 830]
+router_id: 3.3.3.3
+
+ospf:
+  areas:
+    - name: 0.0.0.0
+      interfaces:
+        - name: ge-0/0/1.0
+          type: p2p

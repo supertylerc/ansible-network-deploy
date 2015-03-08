@@ -1,0 +1,64 @@
+---
+
+- name: Base Directory Setup
+  hosts: all
+  connection: local
+  gather_facts: no
+  vars:
+    build_dir: "{{ tmp_dir }}/{{ inventory_hostname }}.d/build"
+    config_dir: "{{ tmp_dir }}/{{ inventory_hostname }}.d/config"
+  tasks:
+    - name: Clean Build Directory
+      file:
+        path={{ build_dir }}
+        state=absent
+
+    - name: Create Build Directory
+      file:
+        path={{ build_dir }}
+        state=directory
+
+    - name: Clean Config Directory
+      file:
+        path={{ config_dir }}
+        state=absent
+
+    - name: Create Config Directory
+      file:
+        path={{ config_dir }}
+        state=directory
+
+- name: Build Config
+  hosts: all
+  connection: local
+  gather_facts: no
+  vars:
+    build_dir: "{{ tmp_dir }}/{{ inventory_hostname }}.d/build"
+    config_dir: "{{ tmp_dir }}/{{ inventory_hostname }}.d/config"
+  roles: [ common ]
+
+- name: Compile Config
+  hosts: all
+  connection: local
+  gather_facts: no
+  vars:
+    build_dir: "{{ tmp_dir }}/{{ inventory_hostname }}.d/build"
+    config_dir: "{{ tmp_dir }}/{{ inventory_hostname }}.d/config"
+  tasks:
+    - name: Assemble Fragments
+      assemble:
+        src={{ build_dir }}
+        dest={{ config_dir }}/config
+
+    - name: Prepend Root XML Tag
+      lineinfile:
+        dest={{ config_dir }}/config
+        line="<configuration>"
+        insertbefore=BOF
+      when: vendor == 'juniper'
+
+    - name: Append Root XML Tag
+      lineinfile:
+        dest={{ config_dir }}/config
+        line="</configuration>"
+      when: vendor == 'juniper'

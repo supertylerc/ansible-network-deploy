@@ -1,0 +1,12 @@
+router ospf 1
+!
+{% for area in ospf.areas %}
+{% for interface in area.interfaces %}
+interface {{interface.name }}
+  {% if interface.type == 'p2p' %}
+  ip ospf network point-to-point
+  {% endif %}
+  ip ospf 1 area {{ area.name }}
+!
+{% endfor %}
+{% endfor %}

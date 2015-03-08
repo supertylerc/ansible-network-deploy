@@ -1,0 +1,14 @@
+---
+
+- name: Connectivity Check
+  hosts: all
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Check Connectivity
+      wait_for:
+        host={{ inventory_hostname }}
+        port={{ item }}
+        timeout={{ timeout | default(3) }}
+      with_items: open_ports
+      always_run: yes

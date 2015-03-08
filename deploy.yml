@@ -1,0 +1,134 @@
+---
+
+- name: One-Time Setup
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Get Timestamp
+      command: date +%Y-%m-%d_%H%M%S
+      register: timestamp
+      always_run: yes
+    - name: Get Git Commit Short Hash
+      command: git rev-parse --short HEAD
+      register: git_rev
+      always_run: yes
+
+- name: Base Directory Setup
+  hosts: all
+  connection: local
+  gather_facts: no
+  tasks:
+    - include: tasks/common.yml
+    - name: Create Log Directory
+      file:
+        path={{ log_dir }}
+        state=directory
+
+    - name: Create Diff Directory
+      file:
+        path={{ diff_dir }}
+        state=directory
+
+    - name: Clean Build Directory
+      file:
+        path={{ build_dir }}
+        state=absent
+
+    - name: Clean Config Directory
+      file:
+        path={{ config_dir }}
+        state=absent
+
+    - name: Create Build Directory
+      file:
+        path={{ build_dir }}
+        state=directory
+
+    - name: Create Config Directory
+      file:
+        path={{ config_dir }}
+        state=directory
+
+- name: Fact Collection
+  hosts: all
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Gather Junos Facts
+      junos_get_facts:
+        host={{ inventory_hostname }}
+        user={{ user }}
+        passwd=Ansible
+      register: junos
+      when: vendor == 'juniper'
+
+- name: Build Config
+  hosts: all
+  connection: local
+  gather_facts: no
+  roles: [ common ]
+
+- name: Compile Config
+  hosts: all
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Assemble Fragments
+      assemble:
+        src={{ build_dir }}
+        dest={{ config_file }}
+
+    - name: Prepend Root XML Tag
+      lineinfile:
+        dest={{ config_file }}
+        line="<configuration>"
+        insertbefore=BOF
+      when: vendor == 'juniper'
+
+    - name: Append Root XML Tag
+      lineinfile:
+        dest={{ config_file }}
+        line="</configuration>"
+      when: vendor == 'juniper'
+
+- name: Deploy Config
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Deploy Juniper Networks
+      junos_install_config:
+        host={{ inventory_hostname }}
+        user={{ user }}
+        passwd=Ansible
+        file={{ config_file }}
+        logfile={{ log_dir }}/{{ hostvars.localhost.timestamp.stdout }}.log
+        diffs_file={{ diff_dir }}/{{ hostvars.localhost.timestamp.stdout }}.log
+        comment={{ hostvars.localhost.git_rev.stdout }}
+      when: vendor == 'juniper'
+
+    - name: Enable Quagga
+      copy:
+        src=files/quagga_daemons
+        dest=/etc/quagga/daemons
+        owner=quagga
+        mode=0644
+      when: vendor == 'cumulus'
+
+    - name: Deploy Cumulus Networks
+      copy:
+        src={{ config_file }}
+        dest=/etc/quagga/Quagga.conf
+        owner=quagga
+        mode=0644
+      when: vendor == 'cumulus'
+
+    - name: Deploy Cisco Systems
+      netmiko_install_config:
+        host={{ inventory_hostname }}
+        user=vagrant
+        passwd=vagrant
+        file={{ config_file }}
+        log_file={{ log_dir }}/{{ hostvars.localhost.timestamp.stdout }}.log
+        diff_file={{ diff_dir }}/{{ hostvars.localhost.timestamp.stdout }}.log
+      when: vendor == 'ios'

@@ -1,0 +1,17 @@
+<protocols>
+  <ospf operation="replace">
+    {% for area in ospf.areas %}
+    <area>
+      <name>{{ area.name }}</name>
+      {% for interface in area.interfaces %}
+      <interface>
+        <name>{{ interface.name }}</name>
+        {% if interface.type is defined %}
+        <interface-type>{{ interface.type }}</interface-type>
+        {% endif %}
+      </interface>
+      {% endfor %}
+    </area>
+    {% endfor %}
+  </ospf>
+</protocols>

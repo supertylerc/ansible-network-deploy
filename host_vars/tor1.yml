@@ -1,0 +1,12 @@
+---
+
+vendor: cumulus
+open_ports: [22]
+router_id: 5.5.5.5
+
+ospf:
+  areas:
+    - name: 0.0.0.0
+      interfaces:
+        - name: swp1
+          type: p2p

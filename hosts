@@ -1,0 +1,11 @@
+[jnpr-ngfw]
+ngfw1 ansible_connection=local
+ngfw2 ansible_connection=local
+
+[cumulus-tor]
+tor1
+tor2
+
+[csco-cr]
+cr1 ansible_connection=local
+cr2

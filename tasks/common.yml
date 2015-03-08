@@ -1,0 +1,25 @@
+---
+
+- name: Check Connectivity
+  wait_for:
+    host={{ inventory_hostname }}
+    port={{ item }}
+    timeout={{ timeout | default(5) }}
+  with_items: open_ports
+  always_run: yes
+
+- name: Get Current Directory
+  command: /bin/pwd
+  register: cwd
+  always_run: yes
+
+- name: Setting Build Paths
+  set_fact:
+      build_dir: "{{ tmp_dir }}/build/{{ inventory_hostname }}.d"
+      diff_dir: "{{ cwd.stdout }}/diffs/{{ inventory_hostname }}.d"
+      log_dir: "{{ cwd.stdout }}/logs/{{ inventory_hostname }}.d"
+      config_dir: "{{ cwd.stdout }}/configs/{{ inventory_hostname }}.d/"
+
+- name: Setting Config File
+  set_fact:
+      config_file: "{{ config_dir }}/config.{{ format }}"

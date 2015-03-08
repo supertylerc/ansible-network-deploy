@@ -1,0 +1,12 @@
+---
+
+vendor: ios
+open_ports: [22]
+router_id: 2.2.2.2
+
+ospf:
+  areas:
+    - name: 0.0.0.0
+      interfaces:
+        - name: fa0/0
+          type: p2p

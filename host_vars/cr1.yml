@@ -1,0 +1,13 @@
+---
+
+format: cnf
+vendor: ios
+open_ports: [22]
+router_id: 1.1.1.1
+
+ospf:
+  areas:
+    - name: 0.0.0.0
+      interfaces:
+        - name: gi3
+          type: p2p

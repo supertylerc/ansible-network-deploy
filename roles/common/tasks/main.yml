@@ -1,0 +1,17 @@
+---
+
+- name: Router ID Configuration
+  template:
+    src={{ vendor }}/router_id.j2
+    dest={{ build_dir }}/router_id.cnf
+    mode=0400
+  always_run: yes
+  tags: [ common, ospf, bgp ]
+
+- name: OSPF Configuration
+  template:
+    src={{ vendor }}/ospf.j2
+    dest={{ build_dir }}/ospf.cnf
+    mode=0400
+  always_run: yes
+  tags: [ common, ospf ]
